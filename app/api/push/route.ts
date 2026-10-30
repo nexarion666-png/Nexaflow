@@ -26,7 +26,8 @@ export async function POST(req:Request){
   }
   if(!blobs.length) return NextResponse.json({error:'No pushable files found.'},{status:400});
   const tree=await gh.rest.git.createTree({owner,repo:name,base_tree:base.data.tree.sha,tree:blobs});
-  const commit=await gh.rest.git.createCommit({owner,repo:name,message:'Upload project with NexaFlow',tree:tree.data.sha,parents:[base.data.sha]});
+  const projectName=f.name.replace(/\.zip$/i,'').trim()||'project';
+  const commit=await gh.rest.git.createCommit({owner,repo:name,message:`Upload ${projectName}`,tree:tree.data.sha,parents:[base.data.sha]});
   await gh.rest.git.updateRef({owner,repo:name,ref:`heads/${branch}`,sha:commit.data.sha,force:false});
   return NextResponse.json({count:blobs.length,commit:commit.data.sha,url:`https://github.com/${owner}/${name}/commit/${commit.data.sha}`});
  }catch(e:any){return NextResponse.json({error:e?.message||'Push failed.'},{status:500});}
